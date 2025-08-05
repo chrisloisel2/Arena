@@ -169,15 +169,25 @@ class ArenaGame:
 
     def _move_player(self):
         keys = pygame.key.get_pressed()
+        moving = False
         if keys[pygame.K_UP]:
             self.player.rect.y -= self.SPEED
-        if keys[pygame.K_DOWN]:
+            self.player.direction = "top"
+            moving = True
+        elif keys[pygame.K_DOWN]:
             self.player.rect.y += self.SPEED
+            self.player.direction = "bot"
+            moving = True
         if keys[pygame.K_LEFT]:
             self.player.rect.x -= self.SPEED
+            self.player.direction = "left"
+            moving = True
         if keys[pygame.K_RIGHT]:
             self.player.rect.x += self.SPEED
+            self.player.direction = "right"
+            moving = True
 
+        self.player.state = "walk" if moving else "idle"
         self.player.rect.x = max(0, min(self.WIDTH - self.PLAYER_SIZE, self.player.rect.x))
         self.player.rect.y = max(0, min(self.HEIGHT - self.PLAYER_SIZE, self.player.rect.y))
 
