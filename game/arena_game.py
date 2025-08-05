@@ -81,18 +81,26 @@ class ArenaGame:
         self.reset()
 
     def reset(self):
-        self.player = SpriteEntity(
-            x=100,
-            y=100,
-            size=self.PLAYER_SIZE,
-            image_path="./game/sprites/char.png",
-        )
+
         enemy_anim_map = {
             "idletop": (0, 6), "idleleft": (1, 6), "idlebot": (2, 6), "idleright": (3, 6),
             "grabtop": (4, 6), "grableft": (5, 6), "grabbot": (6, 6), "grabright": (7, 6),
             "walktop": (8, 6), "walkleft": (9, 6), "walkbot": (10, 6), "walkright": (11, 6),
             "death": (20, 5)
         }
+        player_anim_map = {
+            "idletop": (0, 6), "idleleft": (1, 6), "idlebot": (2, 6), "idleright": (3, 6),
+            "walktop": (0, 6), "walkleft": (1, 6), "walkbot": (2, 6), "walkright": (3, 6)
+        }
+
+        self.player = AnimatedEntity(
+            x=100,
+            y=100,
+            size=self.PLAYER_SIZE,
+            sprite_sheet_path="./game/sprites/char.png",
+            animation_map=player_anim_map,
+        )
+
         self.enemy = AnimatedEntity(
             x=400,
             y=400,
