@@ -1,8 +1,18 @@
 import pygame
 import random
 
+
 class AnimatedEntity:
-    def __init__(self, x, y, size, sprite_sheet_path, animation_map, default_state="idle", default_direction="bot"):
+    def __init__(
+        self,
+        x,
+        y,
+        size,
+        sprite_sheet_path,
+        animation_map,
+        default_state="idle",
+        default_direction="bot",
+    ):
         self.rect = pygame.Rect(x, y, size, size)
         self.size = size
         self.sprite_sheet_path = sprite_sheet_path
@@ -37,10 +47,26 @@ class AnimatedEntity:
         if frame:
             surface.blit(frame, self.rect)
 
+
+class SpriteEntity:
+    """Simple entity that renders a single static sprite."""
+
+    def __init__(self, x, y, size, image_path):
+        self.rect = pygame.Rect(x, y, size, size)
+        image = pygame.image.load(image_path).convert_alpha()
+        self.image = pygame.transform.scale(image, (size, size))
+
+    def update_animation(self):
+        pass
+
+    def render(self, surface):
+        surface.blit(self.image, self.rect)
+
+
 class ArenaGame:
     WIDTH = 600
     HEIGHT = 600
-    PLAYER_SIZE = 20
+    PLAYER_SIZE = 64
     PNJ_SIZE = 64
     SPEED = 5
 
@@ -55,7 +81,12 @@ class ArenaGame:
         self.reset()
 
     def reset(self):
-        self.player = pygame.Rect(100, 100, self.PLAYER_SIZE, self.PLAYER_SIZE)
+        self.player = SpriteEntity(
+            x=100,
+            y=100,
+            size=self.PLAYER_SIZE,
+            image_path="./game/sprites/char.png",
+        )
         enemy_anim_map = {
             "idletop": (0, 6), "idleleft": (1, 6), "idlebot": (2, 6), "idleright": (3, 6),
             "grabtop": (4, 6), "grableft": (5, 6), "grabbot": (6, 6), "grabright": (7, 6),
@@ -76,7 +107,7 @@ class ArenaGame:
     def get_observation(self):
         return [
             self.enemy.rect.x, self.enemy.rect.y,
-            self.player.x, self.player.y,
+            self.player.rect.x, self.player.rect.y,
             self.hp_pnj, self.hp_player
         ]
 
@@ -102,13 +133,13 @@ class ArenaGame:
             self.enemy.direction = "right"
         elif action == 4:
             self.enemy.state = "grab"
-            if self.enemy.rect.colliderect(self.player):
+            if self.enemy.rect.colliderect(self.player.rect):
                 self.hp_player -= 10
                 reward = 1
         elif action == 5:
             self.enemy.state = "walk"
-            dx = self.enemy.rect.x - self.player.x
-            dy = self.enemy.rect.y - self.player.y
+            dx = self.enemy.rect.x - self.player.rect.x
+            dy = self.enemy.rect.y - self.player.rect.y
             if abs(dx) > abs(dy):
                 self.enemy.direction = "left" if dx > 0 else "right"
             else:
@@ -116,7 +147,7 @@ class ArenaGame:
             self.enemy.rect.x += self.SPEED if dx >= 0 else -self.SPEED
             self.enemy.rect.y += self.SPEED if dy >= 0 else -self.SPEED
 
-        if self.player.colliderect(self.enemy.rect):
+        if self.player.rect.colliderect(self.enemy.rect):
             self.hp_pnj -= 5
             reward -= 1
 
@@ -131,16 +162,16 @@ class ArenaGame:
     def _move_player(self):
         keys = pygame.key.get_pressed()
         if keys[pygame.K_UP]:
-            self.player.y -= self.SPEED
+            self.player.rect.y -= self.SPEED
         if keys[pygame.K_DOWN]:
-            self.player.y += self.SPEED
+            self.player.rect.y += self.SPEED
         if keys[pygame.K_LEFT]:
-            self.player.x -= self.SPEED
+            self.player.rect.x -= self.SPEED
         if keys[pygame.K_RIGHT]:
-            self.player.x += self.SPEED
+            self.player.rect.x += self.SPEED
 
-        self.player.x = max(0, min(self.WIDTH - self.PLAYER_SIZE, self.player.x))
-        self.player.y = max(0, min(self.HEIGHT - self.PLAYER_SIZE, self.player.y))
+        self.player.rect.x = max(0, min(self.WIDTH - self.PLAYER_SIZE, self.player.rect.x))
+        self.player.rect.y = max(0, min(self.HEIGHT - self.PLAYER_SIZE, self.player.rect.y))
 
     def render(self):
         for event in pygame.event.get():
@@ -149,9 +180,10 @@ class ArenaGame:
                 exit()
 
         self.enemy.update_animation()
+        self.player.update_animation()
 
         self.screen.fill((0, 0, 0))
-        pygame.draw.rect(self.screen, (0, 255, 0), self.player)
+        self.player.render(self.screen)
         self.enemy.render(self.screen)
         pygame.display.flip()
         self.clock.tick(30)
