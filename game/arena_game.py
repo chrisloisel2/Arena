@@ -68,6 +68,7 @@ class ArenaGame:
     HEIGHT = 600
     PLAYER_SIZE = 64
     PNJ_SIZE = 64
+    OBSTACLE_SIZE = 64
     SPEED = 5
 
     def __init__(self, render_mode=False):
@@ -112,6 +113,19 @@ class ArenaGame:
         self.hp_pnj = 100
         self.timestep = 0
 
+        self.obstacles = []
+        for _ in range(5):
+            while True:
+                x = random.randint(0, self.WIDTH - self.OBSTACLE_SIZE)
+                y = random.randint(0, self.HEIGHT - self.OBSTACLE_SIZE)
+                new_rect = pygame.Rect(x, y, self.OBSTACLE_SIZE, self.OBSTACLE_SIZE)
+                if new_rect.colliderect(self.player.rect) or new_rect.colliderect(self.enemy.rect) or any(o.rect.colliderect(new_rect) for o in self.obstacles):
+                    continue
+                self.obstacles.append(
+                    SpriteEntity(x, y, self.OBSTACLE_SIZE, "./game/sprites/obstacle.png")
+                )
+                break
+
     def get_observation(self):
         return [
             self.enemy.rect.x, self.enemy.rect.y,
@@ -125,6 +139,7 @@ class ArenaGame:
         self.timestep += 1
         self._move_player()
 
+        old_rect = self.enemy.rect.copy()
         if action == 0:
             self.enemy.state = "idle"
         elif action == 1:
@@ -155,6 +170,13 @@ class ArenaGame:
             self.enemy.rect.x += self.SPEED if dx >= 0 else -self.SPEED
             self.enemy.rect.y += self.SPEED if dy >= 0 else -self.SPEED
 
+        self.enemy.rect.x = max(0, min(self.WIDTH - self.PNJ_SIZE, self.enemy.rect.x))
+        self.enemy.rect.y = max(0, min(self.HEIGHT - self.PNJ_SIZE, self.enemy.rect.y))
+        for obs in self.obstacles:
+            if self.enemy.rect.colliderect(obs.rect):
+                self.enemy.rect = old_rect
+                break
+
         if self.player.rect.colliderect(self.enemy.rect):
             self.hp_pnj -= 5
             reward -= 1
@@ -170,6 +192,7 @@ class ArenaGame:
     def _move_player(self):
         keys = pygame.key.get_pressed()
         moving = False
+        old_rect = self.player.rect.copy()
         if keys[pygame.K_UP]:
             self.player.rect.y -= self.SPEED
             self.player.direction = "top"
@@ -190,6 +213,10 @@ class ArenaGame:
         self.player.state = "walk" if moving else "idle"
         self.player.rect.x = max(0, min(self.WIDTH - self.PLAYER_SIZE, self.player.rect.x))
         self.player.rect.y = max(0, min(self.HEIGHT - self.PLAYER_SIZE, self.player.rect.y))
+        for obs in self.obstacles:
+            if self.player.rect.colliderect(obs.rect):
+                self.player.rect = old_rect
+                break
 
     def render(self):
         for event in pygame.event.get():
@@ -201,6 +228,9 @@ class ArenaGame:
         self.player.update_animation()
 
         self.screen.fill((0, 0, 0))
+        for obs in self.obstacles:
+            obs.update_animation()
+            obs.render(self.screen)
         self.player.render(self.screen)
         self.enemy.render(self.screen)
         pygame.display.flip()
