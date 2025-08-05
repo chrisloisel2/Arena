@@ -89,8 +89,8 @@ class ArenaGame:
             "death": (20, 5)
         }
         player_anim_map = {
-            "idletop": (0, 6), "idleleft": (1, 6), "idlebot": (2, 6), "idleright": (3, 6),
-            "walktop": (0, 6), "walkleft": (1, 6), "walkbot": (2, 6), "walkright": (3, 6)
+            "idletop": (0, 5), "idleleft": (0, 5), "idlebot": (0, 5), "idleright": (0, 5),
+            "walktop": (0, 5), "walkleft": (0, 5), "walkbot": (0, 5), "walkright": (0, 5)
         }
 
         self.player = AnimatedEntity(
