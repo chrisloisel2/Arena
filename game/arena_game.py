@@ -1,5 +1,6 @@
 import pygame
 import random
+from game.map_generator import MapGenerator
 
 
 class AnimatedEntity:
@@ -78,11 +79,16 @@ class ArenaGame:
             self.screen = pygame.display.set_mode((self.WIDTH, self.HEIGHT))
             pygame.display.set_caption("Arena Survival")
             self.clock = pygame.time.Clock()
-
+            self.map_generator = MapGenerator(
+                self.WIDTH, self.HEIGHT, "./game/sprites/terrain"
+            )
+        else:
+            self.map_generator = None
         self.reset()
 
     def reset(self):
-
+        if self.map_generator:
+            self.map_generator.generate()
         enemy_anim_map = {
             "idletop": (0, 6), "idleleft": (1, 6), "idlebot": (2, 6), "idleright": (3, 6),
             "grabtop": (4, 6), "grableft": (5, 6), "grabbot": (6, 6), "grabright": (7, 6),
@@ -226,8 +232,9 @@ class ArenaGame:
 
         self.enemy.update_animation()
         self.player.update_animation()
-
         self.screen.fill((0, 0, 0))
+        if self.map_generator:
+            self.map_generator.render(self.screen)
         for obs in self.obstacles:
             obs.update_animation()
             obs.render(self.screen)
